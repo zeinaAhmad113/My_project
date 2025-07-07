@@ -1,10 +1,14 @@
-django-admin startproject hotel_booking
+python -m venv env
+virtual\Scripts\activate
+pip install django
+pip install djangorestframework
+pip install django-filter
+django-admin startproject hotel
 cd hotel_booking
-python manage.py startapp accounts
+python manage.py migrate 
 python manage.py startapp rooms
 python manage.py startapp reservations
 python manage.py startapp payments
-python manage.py startapp complaints
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -43,19 +47,16 @@ ROOM_STATUS = [
     ('cleaning', 'تحتاج تنظيف'),
     ('maintenance', 'قيد الصيانة'),
 ]
-
 class Room(models.Model):
     number = models.CharField(max_length=10)
     type = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=ROOM_STATUS, default='available')
     price = models.DecimalField(max_digits=8, decimal_places=2)
-
     def str(self):
         return f'Room {self.number}'
   from django.db import models
 from django.conf import settings
 from rooms.models import Room
-
 class Reservation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
@@ -63,12 +64,10 @@ class Reservation(models.Model):
     check_out = models.DateField()
     guests = models.PositiveIntegerField()
     is_canceled = models.BooleanField(default=False)
-
     def str(self):
         return f'{self.user.email} - {self.room.number}'
   from rest_framework import serializers
 from .models import Room
-
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
@@ -77,26 +76,21 @@ class RoomSerializer(serializers.ModelSerializer):
 from .models import Room
 from .serializers import RoomSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
   from rest_framework.routers import DefaultRouter
 from .views import RoomViewSet
-
 router = DefaultRouter()
 router.register(r'rooms', RoomViewSet, basename='room')
-
 urlpatterns = router.urls
 from django.contrib import admin
 from django.urls import path, include
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('rooms.urls')),
 ]
-  
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'
